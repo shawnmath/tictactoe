@@ -62,14 +62,13 @@
 				}			
 			});	
 		});
-	}
-
+	}	
 
 	function checkWin(square) {
 		// data-coord of selected square
 		let sel_coord = square.dataset.coord;
 		// Symbol of selected square (X, O)
-		let sel_symbol = square.querySelector('span').classList;
+		let sel_symbol = square.querySelector('span').classList.value;
 		// Class of the parent row selected square is in
 		let row = square.parentNode.classList;
 
@@ -85,12 +84,50 @@
 		// Get values in same row as selected square
 		let row_vals = document.querySelectorAll(`.${row} .square:not([data-coord="${sel_coord}"])`);		
 
-		console.log(row);
-		
+		// console.log(row);		
 		console.log(col_vals);	
-		console.log(row_vals);
+		console.log(row_vals);		
 
-		
+		console.log( 'COL VAL: ', checkSymbol(col_vals, sel_symbol) );
+		console.log( 'ROW VAL: ', checkSymbol(row_vals, sel_symbol) );
+
+		if( checkSymbol(col_vals, sel_symbol) === true ) {
+			console.log('YOU WIN BY COLS');
+			return;
+		} 
+		else if( checkSymbol(row_vals, sel_symbol) === true ) {
+			console.log('YOU WIN BY ROW');
+			return;	
+		} 
+		else {
+			console.log('NO WINNER');
+		}
+	}
+
+	function checkSymbol(elem_list, sel_symbol) {
+		let sameSymbol = null;
+
+		for(let i = 0; i < elem_list.length; i++) {
+			let el = elem_list[i];
+			
+			if( el.hasChildNodes() ) {				
+				el.childNodes.forEach(child => {
+					if( child.className === sel_symbol ) {
+						// console.log('TRUE DAT');
+						sameSymbol = sameSymbol === false ? false : true;
+					} else {
+						// console.log('NOPE');
+						sameSymbol = false;
+					}
+				});
+			} 
+			else {	
+				sameSymbol = false;						
+				break;
+			}
+		}
+
+		return sameSymbol;
 	}
 
 
