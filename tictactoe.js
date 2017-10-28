@@ -5,7 +5,20 @@
 	------------------*/	
 	var gameState = {
 		player: 1,
-		playerMoves: 0		
+		// Track total number of moves by both players
+		playerMoves: 0,		
+		// data-coord of selected square
+		sel_coord: '',		
+		// Symbol of selected square (X, O)
+		sel_symbol: '',		
+		// Class of the parent row selected square is in
+		row: '',		
+		// Values in same column as selected square
+		col_vals: '',		
+		// Values in same row as selected square
+		row_vals: '',		
+		// Values of diagonal squares		
+		diag_vals: ''
 	}
 
 
@@ -53,6 +66,7 @@
 					update_player();
 
 					gameState.playerMoves++;
+					// Check Game Win Result after 5th player move
 					if( gameState.playerMoves > 4 ) {
 						checkWin(this);
 					}
@@ -64,13 +78,17 @@
 		});
 	}	
 
-	function checkWin(square) {
-		// data-coord of selected square
-		let sel_coord = square.dataset.coord;
-		// Symbol of selected square (X, O)
-		let sel_symbol = square.querySelector('span').classList.value;
-		// Class of the parent row selected square is in
-		let row = square.parentNode.classList;
+
+	/*------------------
+	Check for Win
+	- check if sequential squares (rows, columns, diagonals) have
+	  same symbol as selected square
+	-------------------*/
+	function checkWin(square) {		
+		// Update state object w selected square data coordinate, symbol and parent row
+		gameState.sel_coord = square.dataset.coord,
+		gameState.sel_symbol = square.querySelector('span').classList.value,		
+		gameState.row = square.parentNode.classList;
 
 		// Add class to selected square to query adjacent squares excluding selected square
 		// Remove class from previously selected square
@@ -79,47 +97,46 @@
 		}
 		square.classList.add('sel_square');
 
-		// Get values in same column as selected square
-		let col_vals = document.querySelectorAll(`[data-coord="${sel_coord}"]:not(.sel_square)`);
-		// Get values in same row as selected square
-		let row_vals = document.querySelectorAll(`.${row} .square:not([data-coord="${sel_coord}"])`);		
+		// Populate selected square adjacent square values
+		gameState.col_vals = document.querySelectorAll(`[data-coord="${gameState.sel_coord}"]:not(.sel_square)`);		
+		gameState.row_vals = document.querySelectorAll(`.${gameState.row} .square:not([data-coord="${gameState.sel_coord}"])`);			
+		gameState.diag_vals = document.querySelectorAll(`.gameboard > div:not(.${gameState.row}) .square:not([data-coord="${gameState.sel_coord}"])`);
+	
+		console.log(gameState.col_vals);	
+		console.log(gameState.row_vals);		
+		console.log(gameState.diag_vals);
 
-		// console.log(row);		
-		console.log(col_vals);	
-		console.log(row_vals);		
+		console.log( 'COL VAL: ', checkAdjacentSquares(gameState.col_vals, gameState.sel_symbol) );
+		console.log( 'ROW VAL: ', checkAdjacentSquares(gameState.row_vals, gameState.sel_symbol) );
 
-		console.log( 'COL VAL: ', checkSymbol(col_vals, sel_symbol) );
-		console.log( 'ROW VAL: ', checkSymbol(row_vals, sel_symbol) );
-
-		if( checkSymbol(col_vals, sel_symbol) === true ) {
-			console.log('YOU WIN BY COLS');
-			return;
-		} 
-		else if( checkSymbol(row_vals, sel_symbol) === true ) {
-			console.log('YOU WIN BY ROW');
-			return;	
-		} 
-		else {
-			console.log('NO WINNER');
-		}
+		// Check adjacent square symbols
+		switch(true) {
+			case checkAdjacentSquares(gameState.col_vals, gameState.sel_symbol):
+				console.log('YOU WIN BY COLS');
+				break;		
+			case checkAdjacentSquares(gameState.row_vals, gameState.sel_symbol):
+				console.log('YOU WIN BY ROW');
+				break;
+			case checkAdjacentSquares(gameState.diag_vals, gameState.sel_symbol, true):
+				console.log('YOU WIN BY DIAGONALS');
+				break;
+			default:
+				console.log('NO WINNER');
+				break;		
+		}	
 	}
 
-	function checkSymbol(elem_list, sel_symbol) {
+
+	/*------------------
+	Check Symbol of given row/column/diagonal square DOM list
+	-------------------*/
+	function checkAdjacentSquares(elem_list, sel_symbol, is_diagonal) {
+		var is_diagonal = arguments[2] || false;
 		let sameSymbol = null;
 
 		for(let i = 0; i < elem_list.length; i++) {
-			let el = elem_list[i];
-			
-			if( el.hasChildNodes() ) {				
-				el.childNodes.forEach(child => {
-					if( child.className === sel_symbol ) {
-						// console.log('TRUE DAT');
-						sameSymbol = sameSymbol === false ? false : true;
-					} else {
-						// console.log('NOPE');
-						sameSymbol = false;
-					}
-				});
+			if( elem_list[i].hasChildNodes() ) {								
+				checkSymbol(elem_list[i]);
 			} 
 			else {	
 				sameSymbol = false;						
@@ -127,9 +144,26 @@
 			}
 		}
 
+		// Check class of child element
+		// declared in parent fn to use closure
+		function checkSymbol(elem) {
+			elem.childNodes.forEach(child => {
+				if( child.className === sel_symbol ) {
+					sameSymbol = sameSymbol === false ? false : true;
+				} else {
+					sameSymbol = false;
+				}
+			});
+		}		
+
+
+		/**** CHECK DIAGONAL ****/
+		// if corner sel, check top, bottom data-coord 1 & 3, always data-coord 2 (.middle.middle)
+		// if center sel, check top, bottom data-coord 1 & 3
+
 		return sameSymbol;
 	}
-
+	
 
 	// Init Game
 	return {
