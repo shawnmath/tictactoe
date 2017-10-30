@@ -100,8 +100,12 @@
 		// Populate selected square adjacent square values
 		gameState.col_vals = document.querySelectorAll(`[data-coord="${gameState.sel_coord}"]:not(.sel_square)`);		
 		gameState.row_vals = document.querySelectorAll(`.${gameState.row} .square:not([data-coord="${gameState.sel_coord}"])`);			
-		gameState.diag_vals = document.querySelectorAll(`.gameboard > div:not(.${gameState.row}) .square:not([data-coord="${gameState.sel_coord}"])`);
-	
+		gameState.diag_vals = getDiagonalVals(square);
+
+		console.log('Diagonal Values from FN:')
+		console.log( getDiagonalVals(square) );
+		console.log('------------------------');
+
 		console.log(gameState.col_vals);	
 		console.log(gameState.row_vals);		
 		console.log(gameState.diag_vals);
@@ -126,6 +130,20 @@
 		}	
 	}
 
+	function getDiagonalVals(square) {		
+		if( square === document.querySelector('.middle .middle') ) {
+			return document.querySelectorAll(`.gameboard > div:not(.${gameState.row}) .square:not([data-coord="${gameState.sel_coord}"])`);
+		}
+
+		let 
+			middleDiagonal = document.querySelector('.middle .middle'),
+			position = square.classList.contains('left') ? 'right' : 'left',
+			position_row = gameState.row.value === 'top' ? 'bottom' : 'top';
+
+		let cornerDiagonal = document.querySelector(`.${position_row} .${position}`);
+
+		return [middleDiagonal, cornerDiagonal];					
+	}
 
 	/*------------------
 	Check Symbol of given row/column/diagonal square DOM list
@@ -135,13 +153,18 @@
 		let sameSymbol = null;
 
 		for(let i = 0; i < elem_list.length; i++) {
-			if( elem_list[i].hasChildNodes() ) {								
-				checkSymbol(elem_list[i]);
-			} 
-			else {	
-				sameSymbol = false;						
-				break;
+			if( !is_diagonal ) {				
+				if( elem_list[i].hasChildNodes() ) {								
+					checkSymbol(elem_list[i]);
+				} 
+				else {	
+					sameSymbol = false;						
+					break;
+				}
 			}
+			else {
+				checkDiagonalSymbols(elem_list[i]);
+			}			
 		}
 
 		// Check class of child element
@@ -156,10 +179,38 @@
 			});
 		}		
 
-
 		/**** CHECK DIAGONAL ****/
 		// if corner sel, check top, bottom data-coord 1 & 3, always data-coord 2 (.middle.middle)
 		// if center sel, check top, bottom data-coord 1 & 3
+		function checkDiagonalSymbols(elem) {						
+			if( gameState.row.value === 'top' ) {
+				// let 
+				// 	middle = document.querySelector('.middle .middle');
+				// 	bottom = document.querySelector('.bottom .right');
+				// console.log(middle, bottom);
+
+				if( elem.classList.contains('middle') && elem.dataset.coord === '2' ) {
+					console.log('middle middle:');
+					console.log(elem);
+					elem.childNodes.forEach(child => {
+						if( child.className === sel_symbol ) {
+							sameSymbol = true;
+						}
+					});
+				}
+
+				if( elem.classList.contains('right') && elem.dataset.coord === '3' ) {
+					console.log('bottom right:');
+					console.log(elem);
+					elem.childNodes.forEach(child => {
+						if( child.className === sel_symbol ) {
+							sameSymbol = sameSymbol === false ? false : true;	
+						}
+					});
+				}
+			}						
+		}
+
 
 		return sameSymbol;
 	}
