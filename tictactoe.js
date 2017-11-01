@@ -110,18 +110,15 @@
 		console.log(gameState.row_vals);		
 		console.log(gameState.diag_vals);
 
-		console.log( 'COL VAL: ', checkAdjacentSquares(gameState.col_vals, gameState.sel_symbol) );
-		console.log( 'ROW VAL: ', checkAdjacentSquares(gameState.row_vals, gameState.sel_symbol) );
-
 		// Check adjacent square symbols
 		switch(true) {
-			case checkAdjacentSquares(gameState.col_vals, gameState.sel_symbol):
+			case checkAdjacentSquares(gameState.col_vals):
 				console.log('YOU WIN BY COLS');
 				break;		
-			case checkAdjacentSquares(gameState.row_vals, gameState.sel_symbol):
+			case checkAdjacentSquares(gameState.row_vals):
 				console.log('YOU WIN BY ROW');
 				break;
-			case checkAdjacentSquares(gameState.diag_vals, gameState.sel_symbol, true):
+			case checkAdjacentSquares(gameState.diag_vals, true):
 				console.log('YOU WIN BY DIAGONALS');
 				break;
 			default:
@@ -148,69 +145,49 @@
 	/*------------------
 	Check Symbol of given row/column/diagonal square DOM list
 	-------------------*/
-	function checkAdjacentSquares(elem_list, sel_symbol, is_diagonal) {
+	function checkAdjacentSquares(elem_list, is_diagonal) {
 		var is_diagonal = arguments[2] || false;
 		let sameSymbol = null;
-
+		// Check if selection is middle square
+		let middleSquare = ( gameState.row.value === 'middle' && gameState.sel_coord === '2' ) ? true : false;
+		// If middleSquare, keep track of true values for matching sel_symbol
+		let trueVals = 0;
+		
 		for(let i = 0; i < elem_list.length; i++) {
-			if( !is_diagonal ) {				
-				if( elem_list[i].hasChildNodes() ) {								
-					checkSymbol(elem_list[i]);
-				} 
-				else {	
-					sameSymbol = false;						
-					break;
-				}
+			// If not middle square, only need to check squares that have a symbol, otherwise no win and break loop
+			if( elem_list[i].hasChildNodes() && !middleSquare ) {								
+				checkSymbol(elem_list[i]);
+			} 
+			// If middleSquare, loop thru all the diagonal squares, not just the ones that have a child element with a symbol
+			else if( middleSquare ) {
+				checkSymbol(elem_list[i]);	
 			}
-			else {
-				checkDiagonalSymbols(elem_list[i]);
-			}			
+			// If no child elements, don't bother checking the rest (if not middle square)
+			else {	
+				sameSymbol = false;		
+				break;
+			}
 		}
 
 		// Check class of child element
 		// declared in parent fn to use closure
-		function checkSymbol(elem) {
-			elem.childNodes.forEach(child => {
-				if( child.className === sel_symbol ) {
+		function checkSymbol(elem) {			
+			elem.childNodes.forEach(child => {								
+				if( child.className === gameState.sel_symbol ) {
 					sameSymbol = sameSymbol === false ? false : true;
-				} else {
+					if( middleSquare ) {
+						trueVals++;					
+					}
+				}
+				else {
 					sameSymbol = false;
-				}
-			});
-		}		
+				}								
+			});		
 
-		/**** CHECK DIAGONAL ****/
-		// if corner sel, check top, bottom data-coord 1 & 3, always data-coord 2 (.middle.middle)
-		// if center sel, check top, bottom data-coord 1 & 3
-		function checkDiagonalSymbols(elem) {						
-			if( gameState.row.value === 'top' ) {
-				// let 
-				// 	middle = document.querySelector('.middle .middle');
-				// 	bottom = document.querySelector('.bottom .right');
-				// console.log(middle, bottom);
-
-				if( elem.classList.contains('middle') && elem.dataset.coord === '2' ) {
-					console.log('middle middle:');
-					console.log(elem);
-					elem.childNodes.forEach(child => {
-						if( child.className === sel_symbol ) {
-							sameSymbol = true;
-						}
-					});
-				}
-
-				if( elem.classList.contains('right') && elem.dataset.coord === '3' ) {
-					console.log('bottom right:');
-					console.log(elem);
-					elem.childNodes.forEach(child => {
-						if( child.className === sel_symbol ) {
-							sameSymbol = sameSymbol === false ? false : true;	
-						}
-					});
-				}
-			}						
+			if( trueVals > 2 ) {
+				sameSymbol = true;
+			}			
 		}
-
 
 		return sameSymbol;
 	}
